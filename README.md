@@ -130,7 +130,7 @@ sudo apt update
 sudo apt install linux-tools-virtual hwdata
 sudo update-alternatives --install /usr/local/bin/usbip usbip /usr/lib/linux-tools/*/usbip 20
 sudo modprobe vhci-hcd
-sudo usbip attach -r ip -b 1-5
+sudo usbip attach -r <IP> -b 1-5
 ```
 
 ### 4. Levantar los Contenedores
