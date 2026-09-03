@@ -1,4 +1,4 @@
-# 🚀 Sistema de Control de Accesos - Reconocimiento Facial
+# Sistema de Control de Accesos - Reconocimiento Facial
 
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
@@ -10,7 +10,7 @@ Sistema de control de accesos basado en **reconocimiento facial** utilizando **D
 
 ---
 
-## 📋 Tabla de Contenidos
+## Tabla de Contenidos
 
 - [Características](#-características)
 - [Requisitos del Sistema](#-requisitos-del-sistema)
@@ -23,19 +23,19 @@ Sistema de control de accesos basado en **reconocimiento facial** utilizando **D
 
 ---
 
-## ✨ Características
+## Características
 
-- ✅ **Reconocimiento Facial** con DeepFace (Facenet512)
-- ✅ **Base de Datos Vectorial** con pgvector para embeddings faciales
-- ✅ **API REST** con Flask y autenticación JWT
-- ✅ **Dashboard** interactivo con React y Material-UI
-- ✅ **Contenedores Docker** para fácil despliegue
-- ✅ **Cámara USB** soporte para captura en tiempo real
-- ✅ **Logs de accesos** y auditoría completa
+- **Reconocimiento Facial** con DeepFace (Facenet512)
+- **Base de Datos Vectorial** con pgvector para embeddings faciales
+- **API REST** con Flask y autenticación JWT
+- **Dashboard** interactivo con React y Material-UI
+- **Contenedores Docker** para fácil despliegue
+- **Cámara USB** soporte para captura en tiempo real
+- **Logs de accesos** y auditoría completa
 
 ---
 
-## 🖥️ Requisitos del Sistema
+## Requisitos del Sistema
 
 ### Hardware Mínimo
 - **Procesador:** Intel Core i5 o superior
@@ -51,7 +51,7 @@ Sistema de control de accesos basado en **reconocimiento facial** utilizando **D
 
 ---
 
-## 📦 Instalación Paso a Paso
+## Instalación Paso a Paso
 
 ### 1. Clonar el Repositorio
 
@@ -130,7 +130,7 @@ sudo apt update
 sudo apt install linux-tools-virtual hwdata
 sudo update-alternatives --install /usr/local/bin/usbip usbip /usr/lib/linux-tools/*/usbip 20
 sudo modprobe vhci-hcd
-sudo usbip attach -r 172.31.112.1 -b 1-5
+sudo usbip attach -r ip -b 1-5
 ```
 
 ### 4. Levantar los Contenedores
@@ -170,7 +170,7 @@ docker exec -it backend_accesos python -c "import cv2; print(cv2.__version__)"
 
 ---
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 control-accesos/
@@ -206,7 +206,7 @@ control-accesos/
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 ### Backend
 - **Framework:** Flask 2.3.3
@@ -230,7 +230,7 @@ control-accesos/
 
 ---
 
-## 🔧 Comandos Útiles
+## Comandos Útiles
 
 ### Docker
 
@@ -288,7 +288,7 @@ docker exec -it backend_accesos python -c "import cv2; print(cv2.__version__)"
 
 ---
 
-## 🐛 Solución de Problemas
+## Solución de Problemas
 
 ### Error: Docker no inicia
 ```bash
@@ -328,13 +328,13 @@ docker-compose logs postgres
 
 ---
 
-## 📱 Capturas de Pantalla
+## Capturas de Pantalla
 
 *(Agrega capturas de pantalla de la aplicación en funcionamiento)*
 
 ---
 
-## 👤 Autor
+## Autor
 
 **Nazario Ramírez Cruz**
 
@@ -343,13 +343,13 @@ docker-compose logs postgres
 
 ---
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
 ---
 
-## 🙏 Agradecimientos
+## Agradecimientos
 
 - [DeepFace](https://github.com/serengil/deepface) - Librería de reconocimiento facial
 - [pgvector](https://github.com/pgvector/pgvector) - Extensión de vectores para PostgreSQL
@@ -357,4 +357,4 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 
 ---
 
-**¡Gracias por usar este sistema! 🚀**
+**¡Gracias por usar este sistema!**
