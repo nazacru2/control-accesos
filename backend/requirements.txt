@@ -1,0 +1,88 @@
+# ============================================
+# SISTEMA DE CONTROL DE ACCESOS - BACKEND
+# Dependencias de Python (requirements.txt)
+# ============================================
+
+# ============================================
+# 1. FRAMEWORK WEB Y API
+# ============================================
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-SQLAlchemy==3.0.5
+Flask-Migrate==4.0.4
+Flask-Limiter==3.3.1
+
+# ============================================
+# 2. BASE DE DATOS
+# ============================================
+psycopg2-binary==2.9.7
+SQLAlchemy==2.0.19
+pgvector==0.2.0
+alembic==1.11.3
+
+# ============================================
+# 3. RECONOCIMIENTO FACIAL Y VISIÓN
+# ============================================
+opencv-python-headless==4.8.1.78
+opencv-contrib-python-headless==4.8.1.78
+deepface==0.0.79
+tensorflow==2.13.0
+keras==2.13.1
+mtcnn==0.1.1
+
+# ============================================
+# 4. PROCESAMIENTO DE IMÁGENES
+# ============================================
+Pillow==10.0.0
+imageio==2.31.1
+numpy==1.24.3
+scipy==1.11.1
+scikit-image==0.21.0
+
+# ============================================
+# 5. AUTENTICACIÓN Y SEGURIDAD
+# ============================================
+python-jose==3.3.0
+PyJWT==2.8.0
+python-dotenv==1.0.0
+bcrypt==4.0.1
+passlib==1.7.4
+
+# ============================================
+# 6. UTILIDADES GENERALES
+# ============================================
+requests==2.31.0
+python-multipart==0.0.6
+pandas==2.0.3
+matplotlib==3.7.2
+seaborn==0.12.2
+
+# ============================================
+# 7. LOGGING Y MONITOREO
+# ============================================
+prometheus-flask-exporter==0.22.4
+python-json-logger==2.0.7
+
+# ============================================
+# 8. VALIDACIÓN Y SERIALIZACIÓN (SIN PYDANTIC)
+# ============================================
+marshmallow==3.19.0
+marshmallow-sqlalchemy==0.29.0
+
+# ============================================
+# 9. PRUEBAS Y DESARROLLO
+# ============================================
+pytest==7.4.0
+pytest-cov==4.1.0
+pytest-flask==1.2.0
+black==23.7.0
+flake8==6.1.0
+mypy==1.5.1
+
+# ============================================
+# 10. HERRAMIENTAS ADICIONALES
+# ============================================
+click==8.1.6
+colorama==0.4.6
+tqdm==4.65.0
+python-dateutil==2.8.2

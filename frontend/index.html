@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Accesos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            padding: 50px 40px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        h1 span {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.7;
+            margin-bottom: 25px;
+        }
+        .status {
+            display: inline-block;
+            padding: 10px 30px;
+            background: #4CAF50;
+            border-radius: 50px;
+            font-weight: bold;
+            margin: 15px 0 25px 0;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .api-link {
+            padding: 12px 25px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            display: inline-block;
+            border: 1px solid rgba(255,255,255,0.15);
+            transition: all 0.3s;
+            margin: 10px 0;
+        }
+        .api-link:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+        .api-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.75rem;
+            opacity: 0.4;
+        }
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .feature {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 <span>Control de Accesos</span></h1>
+        <p class="subtitle">Sistema de reconocimiento facial</p>
+
+        <div class="features">
+            <span class="feature">📸 Reconocimiento Facial</span>
+            <span class="feature">🔐 Control de Accesos</span>
+            <span class="feature">📊 Dashboard</span>
+        </div>
+
+        <div class="status">✅ Servidor funcionando</div>
+
+        <div class="api-link">
+            📡 <a href="/api/health" target="_blank">API Health Check</a>
+        </div>
+
+        <div class="footer">
+            Sprint 0 - Configuración Docker | v1.0.0
+        </div>
+    </div>
+</body>
+</html>

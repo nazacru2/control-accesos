@@ -1,0 +1,151 @@
+# ============================================
+# SISTEMA DE CONTROL DE ACCESOS - DOCKER COMPOSE
+# Orquestación de servicios: Backend, Frontend, PostgreSQL
+# ============================================
+
+version: '3.8'
+
+services:
+  # ============================================
+  # 1. BASE DE DATOS POSTGRESQL CON PGVECTOR
+  # ============================================
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: postgres_accesos
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-SecurePassword123!}
+      POSTGRES_DB: control_accesos
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+      TZ: America/Mexico_City
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - accesos_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d control_accesos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================
+  # 2. BACKEND (API DE RECONOCIMIENTO FACIAL)
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend_accesos
+    restart: unless-stopped
+    environment:
+      # Configuración de la base de datos
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: control_accesos
+      DB_USER: admin
+      DB_PASSWORD: ${DB_PASSWORD:-SecurePassword123!}
+      
+      # Configuración de la aplicación
+      SECRET_KEY: ${SECRET_KEY:-clave_super_secreta_123456789}
+      JWT_EXPIRATION_HOURS: 24
+      
+      # Configuración de la cámara
+      CAMERA_TYPE: ${CAMERA_TYPE:-usb}
+      CAMERA_INDEX: ${CAMERA_INDEX:-0}
+      
+      # Configuración de DeepFace
+      DEEPFACE_MODEL: Facenet512
+      DEEPFACE_DETECTOR: mtcnn
+      DEEPFACE_UMBRAL: 0.75
+      
+      # Otras configuraciones
+      TZ: America/Mexico_City
+      PYTHONUNBUFFERED: 1
+      LOG_LEVEL: INFO
+      
+      # URL del frontend (para CORS)
+      FRONTEND_URL: http://localhost
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+      - uploads_data:/app/uploads
+      - models_data:/app/models
+      - logs_data:/app/logs
+      - ./backend/requirements.txt:/app/requirements.txt:ro
+    devices:
+      - /dev/video0:/dev/video0
+      - /dev/video1:/dev/video1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - accesos_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================
+  # 3. FRONTEND (DASHBOARD)
+  # ============================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend_accesos
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:5000/api
+      - NODE_ENV=production
+      - TZ=America/Mexico_City
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - accesos_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# ============================================
+# 4. VOLUMENES PERSISTENTES
+# ============================================
+volumes:
+  postgres_data:
+    name: postgres_accesos_data
+  uploads_data:
+    name: uploads_accesos_data
+  models_data:
+    name: models_accesos_data
+  logs_data:
+    name: logs_accesos_data
+
+# ============================================
+# 5. REDES
+# ============================================
+networks:
+  accesos_network:
+    name: accesos_network
+    driver: bridge
