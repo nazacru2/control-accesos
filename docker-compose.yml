@@ -1,16 +1,15 @@
 # ============================================
 # SISTEMA DE CONTROL DE ACCESOS - DOCKER COMPOSE
 # Orquestación de servicios: Backend, Frontend, PostgreSQL
+# SPRINT 1 - ALINEADO CON CHECKLIST
 # ============================================
-
-version: '3.8'
 
 services:
   # ============================================
   # 1. BASE DE DATOS POSTGRESQL CON PGVECTOR
   # ============================================
   postgres:
-    image: pgvector/pgvector:pg15
+    image: pgvector/pgvector:pg16
     container_name: postgres_accesos
     restart: unless-stopped
     environment:
@@ -24,6 +23,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./database/backups:/backups
     networks:
       - accesos_network
     healthcheck:
@@ -48,32 +48,35 @@ services:
     container_name: backend_accesos
     restart: unless-stopped
     environment:
-      # Configuración de la base de datos
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: control_accesos
       DB_USER: admin
       DB_PASSWORD: ${DB_PASSWORD:-SecurePassword123!}
-      
-      # Configuración de la aplicación
+
       SECRET_KEY: ${SECRET_KEY:-clave_super_secreta_123456789}
       JWT_EXPIRATION_HOURS: 24
-      
-      # Configuración de la cámara
+
+      # Ya no se usa dentro del contenedor (captura ahora se hace en el host
+      # con capture_client.py y se envía por /api/capture en base64).
+      # Se deja documentado por si algún día se vuelve a habilitar acceso nativo.
       CAMERA_TYPE: ${CAMERA_TYPE:-usb}
       CAMERA_INDEX: ${CAMERA_INDEX:-0}
-      
-      # Configuración de DeepFace
-      DEEPFACE_MODEL: Facenet512
+
+      # NOTA: get_recognizer() en validacion.py hardcodea model_name='Facenet512'
+      # y NO lee esta variable de entorno. El default aquí se actualizó a
+      # Facenet512 para que el compose documente lo que realmente corre
+      # (512 dimensiones, confirmado en la prueba 7.2.1). Si se quiere que
+      # el código sí respete esta variable, cambiar validacion.py a:
+      # FaceRecognizer(model_name=os.getenv('DEEPFACE_MODEL', 'Facenet512'), ...)
+      DEEPFACE_MODEL: ${DEEPFACE_MODEL:-Facenet512}
+      SIMILARITY_THRESHOLD: ${SIMILARITY_THRESHOLD:-0.6}
       DEEPFACE_DETECTOR: mtcnn
-      DEEPFACE_UMBRAL: 0.75
-      
-      # Otras configuraciones
+
       TZ: America/Mexico_City
       PYTHONUNBUFFERED: 1
       LOG_LEVEL: INFO
-      
-      # URL del frontend (para CORS)
+
       FRONTEND_URL: http://localhost
     ports:
       - "5000:5000"
@@ -83,9 +86,11 @@ services:
       - models_data:/app/models
       - logs_data:/app/logs
       - ./backend/requirements.txt:/app/requirements.txt:ro
-    devices:
-      - /dev/video0:/dev/video0
-      - /dev/video1:/dev/video1
+      - ./capturas:/app/capturas
+      - ./rostros:/app/rostros
+    # devices: eliminado — ya no aplica con la Opción B (captura en host + API).
+    # /dev/video0 no existe dentro de la VM de Docker Desktop en Windows,
+    # así que este bloque no cumplía ninguna función real.
     depends_on:
       postgres:
         condition: service_healthy

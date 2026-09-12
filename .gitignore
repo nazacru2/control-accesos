@@ -4,6 +4,7 @@
 .env
 .env.local
 .env.*.local
+*.env
 
 # ============================================
 # DEPENDENCIAS DE PYTHON
@@ -18,6 +19,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.venv/
 pip-log.txt
 pip-delete-this-directory.txt
 .pytest_cache/
@@ -28,6 +30,8 @@ htmlcov/
 .dmypy.json
 dmypy.json
 *.log
+logs/
+backend/logs/
 
 # ============================================
 # DEPENDENCIAS DE NODE.JS
@@ -51,6 +55,39 @@ staticfiles/
 *.sqlite3
 *.sqlite
 data/
+
+# ============================================
+# ARCHIVOS DEL PROYECTO (ESPECÍFICOS)
+# ============================================
+# Capturas de rostros (imágenes generadas)
+capturas/
+backend/capturas/
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.raw
+
+# Rostros guardados (embeddings e imágenes)
+rostros/
+backend/rostros/
+
+# Fotos de prueba
+fotos/
+test/
+
+# Modelos de DeepFace (archivos pesados)
+models/
+backend/models/
+*.h5
+*.keras
+*.pb
+*.tflite
+.deepface/
+
+# Respaldos de base de datos
+backups/
+database/backups/
 
 # ============================================
 # ARCHIVOS DE IDE Y EDITORES

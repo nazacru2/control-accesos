@@ -1,6 +1,7 @@
 # ============================================
 # SISTEMA DE CONTROL DE ACCESOS - BACKEND
-# Dockerfile para el servicio de reconocimiento facial
+# Dockerfile optimizado para tu requirements.txt
+# SPRINT 1
 # ============================================
 
 # ============================================
@@ -9,7 +10,7 @@
 FROM python:3.10-slim
 
 # ============================================
-# 2. METADATOS DEL MANTENEDOR
+# 2. METADATOS
 # ============================================
 LABEL maintainer="Ramirez Cruz Nazario"
 LABEL version="1.0.0"
@@ -29,27 +30,24 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # 4. INSTALAR DEPENDENCIAS DEL SISTEMA
 # ============================================
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # Dependencias para OpenCV (versiones actualizadas)
+    # Dependencias para OpenCV
     libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender1 \
     libgomp1 \
-    libblas-dev \
-    liblapack-dev \
     # Dependencias para PostgreSQL
     libpq-dev \
     gcc \
     # Dependencias para procesamiento de imágenes
     ffmpeg \
     libavcodec-extra \
+    libjpeg-dev \
+    libpng-dev \
     # Herramientas útiles
     curl \
     wget \
-    # Dependencias adicionales para DeepFace
-    libjpeg-dev \
-    libpng-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -59,48 +57,37 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # ============================================
-# 6. COPIAR ARCHIVOS DE REQUERIMIENTOS
+# 6. COPIAR Y INSTALAR DEPENDENCIAS
 # ============================================
 COPY requirements.txt .
 
-# ============================================
-# 7. INSTALAR DEPENDENCIAS DE PYTHON
-# ============================================
+# Instalar dependencias en una sola capa para optimizar
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # ============================================
-# 8. INSTALAR DEEPFACE CON DEPENDENCIAS COMPLETAS
-# ============================================
-# DeepFace requiere tensorflow y sus dependencias
-RUN pip install --no-cache-dir \
-    tensorflow==2.13.0 \
-    deepface==0.0.79 \
-    keras==2.13.1 \
-    opencv-python-headless==4.8.1.78 \
-    opencv-contrib-python-headless==4.8.1.78
-
-# ============================================
-# 9. COPIAR EL CÓDIGO FUENTE
+# 7. COPIAR EL CÓDIGO FUENTE
 # ============================================
 COPY . .
 
 # ============================================
-# 10. CREAR CARPETAS NECESARIAS
+# 8. CREAR CARPETAS NECESARIAS
 # ============================================
-RUN mkdir -p /app/uploads /app/logs /app/models /app/temp
+RUN mkdir -p /app/uploads /app/logs /app/models /app/temp \
+    /app/capturas /app/rostros
 
 # ============================================
-# 11. CONFIGURAR PERMISOS
+# 9. CONFIGURAR PERMISOS
 # ============================================
-RUN chmod -R 755 /app/uploads /app/logs /app/models /app/temp
+RUN chmod -R 755 /app/uploads /app/logs /app/models /app/temp \
+    /app/capturas /app/rostros
 
 # ============================================
-# 12. EXPONER PUERTO
+# 10. EXPONER PUERTO
 # ============================================
 EXPOSE 5000
 
 # ============================================
-# 13. COMANDO DE INICIO
+# 11. COMANDO DE INICIO
 # ============================================
-CMD ["python", "-m", "app.main"]
+CMD ["python", "run.py"]
