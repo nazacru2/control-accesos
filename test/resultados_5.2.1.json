@@ -1,0 +1,13 @@
+{
+  "fase": "5.2.1",
+  "mediciones": 20,
+  "exitosos": 20,
+  "errores": 0,
+  "min_ms": 910.06,
+  "max_ms": 1472.2,
+  "promedio_ms": 1115.73,
+  "mediana_ms": 1117.92,
+  "p95_ms": 1246.11,
+  "desv_ms": 131.1,
+  "cumple_sprint": true
+}

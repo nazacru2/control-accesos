@@ -88,6 +88,13 @@ services:
       - ./backend/requirements.txt:/app/requirements.txt:ro
       - ./capturas:/app/capturas
       - ./rostros:/app/rostros
+      # Persiste los pesos descargados por DeepFace (Facenet512, ~95MB, y
+      # los que MTCNN descargue) entre reinicios/recreaciones del
+      # contenedor. Sin esto, cada "docker-compose up" desde cero vuelve a
+      # descargar todo (varios minutos) antes de poder atender la primera
+      # petición de reconocimiento. Ruta confirmada dentro del contenedor:
+      # /root/.deepface/weights/facenet512_weights.h5
+      - deepface_weights:/root/.deepface
     # devices: eliminado — ya no aplica con la Opción B (captura en host + API).
     # /dev/video0 no existe dentro de la VM de Docker Desktop en Windows,
     # así que este bloque no cumplía ninguna función real.
@@ -146,6 +153,8 @@ volumes:
     name: models_accesos_data
   logs_data:
     name: logs_accesos_data
+  deepface_weights:
+    name: deepface_weights_cache
 
 # ============================================
 # 5. REDES

@@ -1,0 +1,11 @@
+{
+  "fase": "5.2.3",
+  "personas_en_bd": 10,
+  "objetivo": 10,
+  "cumple_objetivo": true,
+  "mediciones": 10,
+  "promedio_ms": 1217.48,
+  "min_ms": 840.03,
+  "max_ms": 2798.86,
+  "tiempo_aceptable": true
+}

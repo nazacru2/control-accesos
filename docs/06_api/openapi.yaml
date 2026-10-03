@@ -1,0 +1,536 @@
+openapi: 3.0.3
+info:
+  title: API de Control de Accesos — Registro Biométrico (Sprint 2)
+  description: >
+    Documentación de los endpoints incorporados en el Sprint 2: registro
+    biométrico (Fases 2-3) y gestión de personas/rostros (Fase 4). Generada
+    a partir del código real de backend/app/routes/registro.py,
+    backend/app/services/registro.py y backend/app/routes/personas.py.
+    No incluye los endpoints heredados del Sprint 1 (capture, validacion,
+    acceso, health).
+  version: "2.1.0"
+  contact:
+    name: Ramírez Cruz Nazario
+servers:
+  - url: http://localhost:5000/api
+    description: Backend local (docker-compose)
+
+tags:
+  - name: Registro
+    description: Alta de personas y captura de sus muestras faciales
+  - name: Gestión
+    description: Consulta de personas/rostros y activación/desactivación (HU-10)
+
+paths:
+  /registro/persona:
+    post:
+      tags: [Registro]
+      summary: Registrar una persona con una sola muestra de rostro
+      description: >
+        Da de alta una persona y su primer rostro en una transacción única.
+        Para registrar con varias muestras (recomendado, HU-09), usar
+        POST /registro/persona/multiple.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroPersonaSimpleRequest'
+            example:
+              nombre: "Juan"
+              apellido: "Pérez"
+              matricula: "20240001"
+              tipo: "Estudiante"
+              imagen: "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+              correo: "juan.perez@ito.mx"
+              telefono: "9511234567"
+      responses:
+        '201':
+          description: Registro exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistroExitosoResponse'
+              example:
+                success: true
+                message: "Persona registrada exitosamente"
+                data:
+                  persona_id: 12
+                  nombre: "Juan"
+                  apellido: "Pérez"
+                  matricula: "20240001"
+                  tipo: "Estudiante"
+                  rostro_id: 18
+                  activo: true
+                  fecha_registro: "2026-09-12T10:15:00"
+                timestamp: "2026-09-12T10:15:00.123456"
+        '400':
+          description: >
+            Campos faltantes, tipo inválido (fuera de Estudiante/Docente/
+            Administrativo/Visitante), imagen no decodificable, sin rostro
+            detectable, más de un rostro en la imagen, o rostro menor a
+            MIN_FACE_SIZE.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                campos_faltantes:
+                  value:
+                    success: false
+                    error: "Faltan campos requeridos: matricula, imagen"
+                    timestamp: "2026-09-12T10:15:00.123456"
+                tipo_invalido:
+                  value:
+                    success: false
+                    error: "Tipo inválido: 'Empleado'. Valores permitidos: Administrativo, Docente, Estudiante, Visitante"
+                    timestamp: "2026-09-12T10:15:00.123456"
+                sin_rostro:
+                  value:
+                    success: false
+                    error: "No se detectó ningún rostro en la imagen"
+                    timestamp: "2026-09-12T10:15:00.123456"
+        '409':
+          description: La matrícula ya está registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: "Ya existe una persona con matrícula 20240001"
+                timestamp: "2026-09-12T10:15:00.123456"
+        '500':
+          description: Error interno no controlado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /registro/persona/multiple:
+    post:
+      tags: [Registro]
+      summary: Registrar una persona con múltiples muestras de rostro (HU-09)
+      description: >
+        Recibe entre 3 y MAX_SAMPLES_PER_PERSON imágenes, extrae un embedding
+        de cada una, y registra a la persona junto con todos los rostros
+        válidos en una sola transacción. Opcionalmente calcula y guarda un
+        embedding promedio adicional (incluir_promedio, por defecto true).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroPersonaMultipleRequest'
+            example:
+              nombre: "Juan"
+              apellido: "Pérez"
+              matricula: "20240001"
+              tipo: "Docente"
+              imagenes:
+                - "data:image/jpeg;base64,/9j/4AAQSkZJRg...(frontal)"
+                - "data:image/jpeg;base64,/9j/4AAQSkZJRg...(izquierda)"
+                - "data:image/jpeg;base64,/9j/4AAQSkZJRg...(derecha)"
+              correo: "juan.perez@ito.mx"
+              telefono: "9511234567"
+              incluir_promedio: true
+      responses:
+        '201':
+          description: Registro exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistroMultipleExitosoResponse'
+              example:
+                success: true
+                message: "Persona registrada con 4 rostros"
+                data:
+                  persona_id: 13
+                  nombre: "Juan"
+                  apellido: "Pérez"
+                  matricula: "20240001"
+                  tipo: "Docente"
+                  total_rostros: 4
+                  rostros_ids: [19, 20, 21, 22]
+                  activo: true
+                  fecha_registro: "2026-09-12T10:20:00"
+                timestamp: "2026-09-12T10:20:00.123456"
+        '400':
+          description: >
+            Campos faltantes, 'imagenes' no es lista, menos de 3 imágenes
+            recibidas, menos de 3 imágenes válidas tras la extracción de
+            embeddings, o total de muestras (+ promedio) mayor a
+            MAX_SAMPLES_PER_PERSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                menos_de_3:
+                  value:
+                    success: false
+                    error: "Se requieren al menos 3 muestras de rostro, se recibieron 2"
+                    timestamp: "2026-09-12T10:20:00.123456"
+                muestras_invalidas:
+                  value:
+                    success: false
+                    error: "Solo 2 de 4 muestras fueron válidas. Se requieren al menos 3. Errores: Muestra 2: no se detectó rostro o falló la extracción; Muestra 4: imagen inválida (Error decodificando base64: ...)"
+                    timestamp: "2026-09-12T10:20:00.123456"
+        '409':
+          description: La matrícula ya está registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno no controlado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /personas:
+    get:
+      tags: [Gestión]
+      summary: Listar personas registradas
+      parameters:
+        - name: activo
+          in: query
+          required: false
+          schema: { type: boolean }
+          description: Filtra por estado activo/inactivo de la persona.
+        - name: tipo
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/TipoPersona' }
+      responses:
+        '200':
+          description: Lista de personas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  total: { type: integer }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Persona' }
+                  timestamp: { type: string, format: date-time }
+              example:
+                success: true
+                total: 2
+                data:
+                  - id: 12
+                    nombre: "Juan"
+                    apellido: "Pérez"
+                    matricula_empleado: "20240001"
+                    tipo: "Estudiante"
+                    activo: true
+                  - id: 13
+                    nombre: "María"
+                    apellido: "López"
+                    matricula_empleado: "20240002"
+                    tipo: "Docente"
+                    activo: true
+                timestamp: "2026-09-12T11:00:00.123456"
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /persona/{persona_id}:
+    get:
+      tags: [Gestión]
+      summary: Obtener una persona por ID (incluye conteo de rostros)
+      parameters:
+        - name: persona_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Datos de la persona
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  id: 12
+                  nombre: "Juan"
+                  apellido: "Pérez"
+                  matricula_empleado: "20240001"
+                  tipo: "Estudiante"
+                  activo: true
+                  total_rostros: 4
+                  rostros_activos: 4
+                timestamp: "2026-09-12T11:02:00.123456"
+        '404':
+          description: Persona no encontrada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example:
+                success: false
+                error: "Persona con id=999 no encontrada"
+                timestamp: "2026-09-12T11:02:00.123456"
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /rostros/{persona_id}:
+    get:
+      tags: [Gestión]
+      summary: Listar los rostros de una persona (HU-10)
+      description: >
+        Incluye el campo es_promedio (true si la fila corresponde al
+        embedding promedio generado en el registro múltiple, no a una
+        muestra capturada directamente).
+      parameters:
+        - name: persona_id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: activo
+          in: query
+          required: false
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: Lista de rostros de la persona
+          content:
+            application/json:
+              example:
+                success: true
+                persona_id: 12
+                persona: "Juan Pérez"
+                total: 4
+                data:
+                  - id: 19
+                    persona_id: 12
+                    activo: true
+                    imagen_respaldo: "uploads/rostros/persona_12_a1b2c3d4.jpg"
+                    fecha_captura: "2026-09-12T10:20:00"
+                    es_promedio: false
+                  - id: 22
+                    persona_id: 12
+                    activo: true
+                    imagen_respaldo: "uploads/rostros/persona_12_promedio_e5f6a7b8.jpg"
+                    fecha_captura: "2026-09-12T10:20:01"
+                    es_promedio: true
+                timestamp: "2026-09-12T11:05:00.123456"
+        '404':
+          description: Persona no encontrada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /rostro/{rostro_id}/activar:
+    put:
+      tags: [Gestión]
+      summary: Activar un rostro para que participe en la validación (HU-10)
+      parameters:
+        - name: rostro_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: >
+            Rostro activado. Nota: también regresa 200 (idempotente) si el
+            rostro ya estaba activo, con el mensaje "ya estaba activo".
+          content:
+            application/json:
+              example:
+                success: true
+                message: "Rostro 19 activado correctamente"
+                data: { id: 19, persona_id: 12, activo: true }
+                timestamp: "2026-09-12T11:10:00.123456"
+        '404':
+          description: Rostro no encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /rostro/{rostro_id}/desactivar:
+    put:
+      tags: [Gestión]
+      summary: Desactivar un rostro para excluirlo de la validación (HU-10)
+      description: >
+        Un rostro desactivado permanece almacenado (no se borra el
+        embedding); la consulta de /api/validacion lo excluye porque filtra
+        por activo = TRUE.
+      parameters:
+        - name: rostro_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: >
+            Rostro desactivado. También 200 (idempotente) si ya estaba
+            inactivo.
+          content:
+            application/json:
+              example:
+                success: true
+                message: "Rostro 19 desactivado correctamente"
+                data: { id: 19, persona_id: 12, activo: false }
+                timestamp: "2026-09-12T11:12:00.123456"
+        '404':
+          description: Rostro no encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /rostro/{rostro_id}:
+    delete:
+      tags: [Gestión]
+      summary: Eliminar un rostro (borrado lógico)
+      description: >
+        Por política del sistema NUNCA se borra físicamente el registro
+        (para preservar el historial de accesos que lo referencian) — este
+        endpoint es funcionalmente equivalente a PUT /rostro/{id}/desactivar,
+        solo cambia el verbo HTTP y el mensaje de respuesta.
+      parameters:
+        - name: rostro_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Rostro marcado como inactivo
+          content:
+            application/json:
+              example:
+                success: true
+                message: "Rostro 19 eliminado (marcado como inactivo)"
+                data: { id: 19, persona_id: 12, activo: false, eliminado_logicamente: true }
+                timestamp: "2026-09-12T11:15:00.123456"
+        '404':
+          description: Rostro no encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+components:
+  schemas:
+    Persona:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string }
+        apellido: { type: string }
+        matricula_empleado: { type: string }
+        tipo: { $ref: '#/components/schemas/TipoPersona' }
+        correo: { type: string, nullable: true }
+        telefono: { type: string, nullable: true }
+        activo: { type: boolean }
+        fecha_registro: { type: string, format: date-time }
+        fecha_actualizacion: { type: string, format: date-time }
+
+    TipoPersona:
+      type: string
+      enum: [Estudiante, Docente, Administrativo, Visitante]
+      description: Debe coincidir con el CHECK constraint persona_tipo_check de PostgreSQL.
+
+    RegistroPersonaSimpleRequest:
+      type: object
+      required: [nombre, apellido, matricula, tipo, imagen]
+      properties:
+        nombre: { type: string, example: "Juan" }
+        apellido: { type: string, example: "Pérez" }
+        matricula: { type: string, example: "20240001" }
+        tipo: { $ref: '#/components/schemas/TipoPersona' }
+        imagen:
+          type: string
+          format: byte
+          description: Imagen en base64, con o sin prefijo "data:image/...;base64,"
+        correo: { type: string, nullable: true, example: "juan@ejemplo.com" }
+        telefono: { type: string, nullable: true, example: "9511234567" }
+
+    RegistroPersonaMultipleRequest:
+      type: object
+      required: [nombre, apellido, matricula, tipo, imagenes]
+      properties:
+        nombre: { type: string }
+        apellido: { type: string }
+        matricula: { type: string }
+        tipo: { $ref: '#/components/schemas/TipoPersona' }
+        imagenes:
+          type: array
+          minItems: 3
+          items: { type: string, format: byte }
+        correo: { type: string, nullable: true }
+        telefono: { type: string, nullable: true }
+        incluir_promedio:
+          type: boolean
+          default: true
+          description: Si se agrega un rostro adicional con el embedding promedio de las muestras.
+
+    RegistroExitosoResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            persona_id: { type: integer }
+            nombre: { type: string }
+            apellido: { type: string }
+            matricula: { type: string }
+            tipo: { $ref: '#/components/schemas/TipoPersona' }
+            rostro_id: { type: integer }
+            activo: { type: boolean }
+            fecha_registro: { type: string, format: date-time }
+        timestamp: { type: string, format: date-time }
+
+    RegistroMultipleExitosoResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            persona_id: { type: integer }
+            nombre: { type: string }
+            apellido: { type: string }
+            matricula: { type: string }
+            tipo: { $ref: '#/components/schemas/TipoPersona' }
+            total_rostros: { type: integer }
+            rostros_ids: { type: array, items: { type: integer } }
+            activo: { type: boolean }
+            fecha_registro: { type: string, format: date-time }
+        timestamp: { type: string, format: date-time }
+
+    ErrorResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        error: { type: string }
+        timestamp: { type: string, format: date-time }

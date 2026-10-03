@@ -41,9 +41,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+# NOTA: package-lock.json y yarn.lock SÍ deben subirse a git (fijan
+# versiones exactas de dependencias para builds reproducibles). No se
+# excluyen aquí a propósito.
 
 # ============================================
 # ARCHIVOS DE CARGA Y DATOS
@@ -54,7 +54,6 @@ staticfiles/
 *.db
 *.sqlite3
 *.sqlite
-data/
 
 # ============================================
 # ARCHIVOS DEL PROYECTO (ESPECÍFICOS)
@@ -62,21 +61,25 @@ data/
 # Capturas de rostros (imágenes generadas)
 capturas/
 backend/capturas/
+
+# Rostros guardados (embeddings e imágenes)
+rostros/
+backend/rostros/
+
+# Fotos de prueba reales — SOLO las imágenes, no el código de prueba.
+# NOTA: antes esto excluía toda la carpeta test/, lo que también ocultaba
+# test_fase_7_1.py, test_fase_7_2.py, capturar_fotos_prueba.py, etc. —
+# justo la evidencia de pruebas que el checklist del Sprint 2 pide subir.
+fotos/
+test/fotos7/
 *.jpg
 *.jpeg
 *.png
 *.bmp
 *.raw
 
-# Rostros guardados (embeddings e imágenes)
-rostros/
-backend/rostros/
-
-# Fotos de prueba
-fotos/
-test/
-
-# Modelos de DeepFace (archivos pesados)
+# Modelos de DeepFace (archivos pesados, ya persistidos en volumen Docker,
+# no en el repo)
 models/
 backend/models/
 *.h5

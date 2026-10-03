@@ -105,12 +105,16 @@ def register_blueprints(app):
     from app.routes import captura_bp
     from app.routes import validacion_bp
     from app.routes import acceso_bp
-    
+    from app.routes import registro_bp      # Sprint 2 - Fase 2.2
+    from app.routes import personas_bp      # 🆕 Sprint 2 - Fase 4.1
+
     app.register_blueprint(health_bp, url_prefix='/api')
     app.register_blueprint(captura_bp, url_prefix='/api')
     app.register_blueprint(validacion_bp, url_prefix='/api')
     app.register_blueprint(acceso_bp, url_prefix='/api')
-    
+    app.register_blueprint(registro_bp, url_prefix='/api')     # Sprint 2 - Fase 2.2
+    app.register_blueprint(personas_bp, url_prefix='/api')     # 🆕 Sprint 2 - Fase 4.1
+
     app.logger.info('Blueprints registrados')
 
 def register_error_handlers(app):

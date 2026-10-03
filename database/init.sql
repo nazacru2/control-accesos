@@ -4,6 +4,9 @@
 -- PostgreSQL + pgvector
 -- ALINEADO CON CHECKLIST SPRINT 1
 -- CORREGIDO: Error ROUND en vista
+-- CORREGIDO (Sprint 2): EMP001 de prueba eliminado (persona + rostro
+-- fantasma con embedding aleatorio); ver migracion_docente.sql para el
+-- cambio de 'Profesor' a 'Docente' en el CHECK de persona.tipo.
 -- ============================================
 
 -- ============================================
@@ -21,7 +24,7 @@ CREATE TABLE IF NOT EXISTS Persona (
     nombre VARCHAR(50) NOT NULL,
     apellido VARCHAR(50) NOT NULL,
     matricula_empleado VARCHAR(20) UNIQUE NOT NULL,
-    tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('Estudiante', 'Profesor', 'Administrativo', 'Visitante')),
+    tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('Estudiante', 'Docente', 'Administrativo', 'Visitante')),
     correo VARCHAR(100),
     telefono VARCHAR(20),
     activo BOOLEAN DEFAULT TRUE,
@@ -153,6 +156,10 @@ FOR EACH ROW
 EXECUTE FUNCTION update_fecha_actualizacion();
 
 -- 5.3 Función: Buscar persona por embedding
+-- NOTA: no la usa ningún endpoint actual (validacion.py hace su propia
+-- consulta con pgvector). Su umbral por defecto (0.75) es distinto del
+-- SIMILARITY_THRESHOLD real del sistema (0.6) — si se retoma en el
+-- futuro, alinear ambos valores.
 CREATE OR REPLACE FUNCTION buscar_persona_por_embedding(
     p_embedding vector(512),
     p_umbral FLOAT DEFAULT 0.75
@@ -188,6 +195,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 5.4 Función: Registrar acceso
+-- NOTA: no la usa ningún endpoint actual (validacion.py y acceso.py
+-- insertan Acceso vía SQLAlchemy ORM). Si se retoma, revisar el orden
+-- de los parámetros posicionales antes de volver a llamarla.
 CREATE OR REPLACE FUNCTION registrar_acceso(
     p_rostro_id INTEGER DEFAULT NULL,
     p_persona_id INTEGER DEFAULT NULL,
@@ -247,35 +257,39 @@ INSERT INTO Persona (nombre, apellido, matricula_empleado, tipo, correo)
 VALUES ('Admin', 'Sistema', 'ADMIN001', 'Administrativo', 'admin@sistema.com')
 ON CONFLICT (matricula_empleado) DO NOTHING;
 
--- Usuario de prueba (Checklist)
-INSERT INTO Persona (nombre, apellido, matricula_empleado, tipo, correo)
-VALUES ('Usuario', 'Prueba', 'EMP001', 'Estudiante', 'usuario.prueba@instituto.com')
-ON CONFLICT (matricula_empleado) DO NOTHING;
+-- Usuario de prueba (Checklist) — DESHABILITADO (Sprint 2):
+-- se eliminó de la base real por tener un embedding aleatorio, no un
+-- rostro válido. Ver /mnt/user-data/outputs/limpieza_emp001.sql.
+-- INSERT INTO Persona (nombre, apellido, matricula_empleado, tipo, correo)
+-- VALUES ('Usuario', 'Prueba', 'EMP001', 'Estudiante', 'usuario.prueba@instituto.com')
+-- ON CONFLICT (matricula_empleado) DO NOTHING;
 
--- Rostro de prueba
-DO $$
-DECLARE
-    v_persona_id INTEGER;
-    v_test_vector vector(512);
-BEGIN
-    SELECT id INTO v_persona_id FROM Persona WHERE matricula_empleado = 'EMP001';
-    
-    v_test_vector := array(
-        SELECT random() * 0.1 
-        FROM generate_series(1, 512)
-    )::vector;
-    
-    INSERT INTO Rostro (persona_id, embedding, imagen_respaldo, fecha_captura, activo)
-    VALUES (
-        v_persona_id,
-        v_test_vector,
-        'rostros/prueba_001.jpg',
-        CURRENT_TIMESTAMP,
-        TRUE
-    );
-    
-    RAISE NOTICE 'Datos de prueba insertados correctamente';
-END $$;
+-- Rostro de prueba — DESHABILITADO (Sprint 2): dependía del INSERT de
+-- EMP001 de arriba. Sin ese INSERT, v_persona_id queda NULL y el
+-- INSERT INTO Rostro de este bloque violaba el NOT NULL de persona_id.
+-- DO $$
+-- DECLARE
+--     v_persona_id INTEGER;
+--     v_test_vector vector(512);
+-- BEGIN
+--     SELECT id INTO v_persona_id FROM Persona WHERE matricula_empleado = 'EMP001';
+--
+--     v_test_vector := array(
+--         SELECT random() * 0.1
+--         FROM generate_series(1, 512)
+--     )::vector;
+--
+--     INSERT INTO Rostro (persona_id, embedding, imagen_respaldo, fecha_captura, activo)
+--     VALUES (
+--         v_persona_id,
+--         v_test_vector,
+--         'rostros/prueba_001.jpg',
+--         CURRENT_TIMESTAMP,
+--         TRUE
+--     );
+--
+--     RAISE NOTICE 'Datos de prueba insertados correctamente';
+-- END $$;
 
 -- ============================================
 -- 7. VERIFICACIÓN DE CHECKLIST
@@ -312,7 +326,7 @@ BEGIN
     RAISE NOTICE '2.1.5 Tabla Acceso: %', 
         CASE WHEN v_check_acceso THEN 'COMPLETA' ELSE 'INCOMPLETA' END;
     RAISE NOTICE '2.1.6 Índices: CREADOS';
-    RAISE NOTICE '2.1.7 Datos de prueba: INSERTADOS';
+    RAISE NOTICE '2.1.7 Datos de prueba: INSERTADOS (solo ADMIN001)';
     RAISE NOTICE '============================================';
     RAISE NOTICE 'BASE DE DATOS LISTA PARA SPRINT 1';
     RAISE NOTICE '============================================';

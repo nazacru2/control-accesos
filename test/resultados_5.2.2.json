@@ -1,0 +1,24 @@
+{
+  "fase": "5.2.2",
+  "version": "corregida",
+  "personas_totales": 3,
+  "personas_saltadas": 2,
+  "total_validaciones": 1,
+  "aciertos": 1,
+  "no_match": 0,
+  "confusiones": 0,
+  "precision_pct": 100.0,
+  "cumple_sprint": true,
+  "detalle": [
+    {
+      "esperado": 9,
+      "esperado_nombre": "Test Multiple",
+      "detectado": 9,
+      "exito": true,
+      "correcto": true,
+      "confianza": 0.9024737635588415,
+      "nivel": "alta"
+    }
+  ],
+  "nota": "Test corregido: 1 captura por persona, permite saltar"
+}
